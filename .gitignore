@@ -1,0 +1,5 @@
+*.env
+oi-app/
+oi-bff/
+oi-proxy/
+logs/
