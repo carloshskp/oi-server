@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+
+  db:
+    image: mongo:4.4.2-bionic
+    restart: always
+    networks:
+      - oi-network
+    volumes:
+      - oi-db-volume:/data/db
+    ports:
+      - 27017:27017
+    env_file:
+      - ./db.env
+
+  cache:
+    image: redis:6.0.9-alpine
+    restart: always
+    networks:
+      - oi-network
+    ports:
+      - 6379:6379
+ 
+  bff:
+    build: ./oi-bff
+    image: oi-bff:latest
+    restart: always
+    volumes:
+      - ./logs/bff:/logs
+    env_file:
+      - ./bff.env
+    ports:
+      - 8081:80
+    networks:
+      - oi-network
+    depends_on:
+      - db
+      - cache
+
+  app:
+    build: ./oi-app
+    image: oi-app:latest
+    ports:
+      - 8080:80
+    networks:
+      - oi-network
+    depends_on:
+      - bff
+  
+  proxy:
+    build: ./oi-proxy
+    image: oi-proxy:latest
+    restart: always
+    volumes:
+      - ./logs/proxy:/var/log/nginx
+    ports:
+      - 80:80
+    networks:
+      - oi-network
+
+volumes:
+  oi-db-volume:
+
+networks:
+  oi-network:
